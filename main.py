@@ -36,7 +36,7 @@ def get_html_template(filename: str):
     return f"<h1>{filename} sahifasi topilmadi! templates papkasini tekshiring.</h1>"
 
 
-# --- 1. ASOSIYY SAHIFALAR UCHUN ENDPOINTLAR ---
+# --- 1. ASOSIY SAHIFALAR UCHUN ENDPOINTLAR ---
 
 @app.get("/", response_class=HTMLResponse)
 def read_frontend():
