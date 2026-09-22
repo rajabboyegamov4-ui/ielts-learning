@@ -1,0 +1,23 @@
+# Virtual muhitlar (eng og'ir papkalar, GitHubga ketmasligi shart)
+venv/
+.venv/
+env/
+
+# Python keshlari va keraksiz fayllari
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ma'lumotlar bazasi (Baza faqat sizning kompyuteringizda turishi kerak)
+*.sqlite3
+*.db
+ielts_platform.db
+
+# Yashirin muhit o'zgaruvchilari (API kalitlar, parollar uchun)
+.env
+
+# VS Code va Operatsion tizim sozlamalari
+.vscode/
+.DS_Store
+Thumbs.db
