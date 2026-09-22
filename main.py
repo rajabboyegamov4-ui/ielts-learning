@@ -1,17 +1,19 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from database import engine, get_db
 import models
 from pydantic import BaseModel
 from datetime import date
+import os
 
 # Jadvallarni bazada avtomatik yaratish
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="IELTS & AI Learning Platform API", version="1.0")
 
-# Pydantic sxemalari (Ma'lumotlarni qabul qilish uchun)
+# --- PYDANTIC SXEMALARI (Ma'lumotlarni qabul qilish uchun) ---
 class VocabCreate(BaseModel):
     word: str
     translation: str
@@ -25,10 +27,51 @@ class TaskDoneUpdate(BaseModel):
     item_id: int
 
 
-@app.get("/")
-def read_root():
-    return {"message": "IELTS Platform API ishga tushdi! May oyigacha to'xtamaymiz 🚀"}
+# --- FRONTEND (HTML) SAHIFALARNI UZATISH UCHUN YORDAMCHI FUNKSIYA ---
+def get_html_template(filename: str):
+    file_path = f"templates/{filename}"
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return f"<h1>{filename} sahifasi topilmadi! templates papkasini tekshiring.</h1>"
 
+
+# --- 1. ASOSIYY SAHIFALAR UCHUN ENDPOINTLAR ---
+
+@app.get("/", response_class=HTMLResponse)
+def read_frontend():
+    return get_html_template("index.html")
+
+@app.get("/listening", response_class=HTMLResponse)
+def read_listening():
+    return get_html_template("listening.html")
+
+@app.get("/speaking", response_class=HTMLResponse)
+def read_speaking():
+    return get_html_template("speaking.html")
+
+@app.get("/reading", response_class=HTMLResponse)
+def read_reading():
+    return get_html_template("reading.html")
+
+@app.get("/writing", response_class=HTMLResponse)
+def read_writing():
+    return get_html_template("writing.html")
+
+@app.get("/grammar", response_class=HTMLResponse)
+def read_grammar():
+    return get_html_template("grammar.html")
+
+@app.get("/exam", response_class=HTMLResponse)
+def read_exam():
+    return get_html_template("exam.html")
+
+
+# --- 2. API ENDPOINTLAR (Backend logikasi va ma'lumotlar bazasi) ---
+
+@app.get("/api/status")
+def api_status():
+    return {"message": "IELTS Platform API ishga tushdi! May oyigacha to'xtamaymiz 🚀"}
 
 @app.get("/users/{user_id}")
 def get_user_profile(user_id: int, db: Session = Depends(get_db)):
@@ -37,16 +80,12 @@ def get_user_profile(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
     return user
 
-
-# --- VOCABULARY (So'zlar) ENDPOINTLARI ---
-
 @app.get("/vocabulary/")
 def get_vocabulary(level: str | None = None, db: Session = Depends(get_db)):
     query = db.query(models.VocabularyWord)
     if level:
         query = query.filter(models.VocabularyWord.level == level)
     return query.all()
-
 
 @app.post("/vocabulary/")
 def create_vocab(vocab: VocabCreate, db: Session = Depends(get_db)):
@@ -55,9 +94,6 @@ def create_vocab(vocab: VocabCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_vocab)
     return db_vocab
-
-
-# --- [DONE] TUGMASI VA KUNLIK VAZIFALAR ENDPOINTI ---
 
 @app.post("/tasks/done")
 def mark_task_done(task: TaskDoneUpdate, db: Session = Depends(get_db)):
@@ -83,30 +119,3 @@ def mark_task_done(task: TaskDoneUpdate, db: Session = Depends(get_db)):
     
     db.commit()
     return {"status": "success", "message": "Vazifa [Done] qilindi va bazaga saqlandi! ✅"}
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-import os
-
-from fastapi.responses import HTMLResponse
-import os
-
-# Asosiy sahifada chiroyli HTML dizaynni ochish
-@app.get("/", response_class=HTMLResponse)
-def read_frontend():
-    file_path = "templates/index.html"
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>Template topilmadi! templates/index.html faylini tekshiring.</h1>"
-
-# API status xabarini boshqa manzilga o'tkazamiz
-@app.get("/api/status")
-def read_root():
-    return {"message": "IELTS Platform API ishga tushdi! May oyigacha to'xtamaymiz 🚀"}
-@app.get("/", response_class=HTMLResponse)
-def read_frontend():
-    file_path = "templates/index.html"
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>Template topilmadi!</h1>"
