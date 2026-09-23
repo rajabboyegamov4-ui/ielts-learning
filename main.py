@@ -1,19 +1,22 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
-from database import engine, get_db
-import models
 from pydantic import BaseModel
 from datetime import date
-import os
+from database import engine, get_db
+import models, schemas, security
 
 # Jadvallarni bazada avtomatik yaratish
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="IELTS & AI Learning Platform API", version="1.0")
 
-# --- PYDANTIC SXEMALARI (Ma'lumotlarni qabul qilish uchun) ---
+# HTML fayllar turgan papkani ulash
+templates = Jinja2Templates(directory="templates")
+
+# --- PYDANTIC SXEMALARI (Lug'at va Vazifalar uchun) ---
 class VocabCreate(BaseModel):
     word: str
     translation: str
@@ -23,51 +26,96 @@ class VocabCreate(BaseModel):
 
 class TaskDoneUpdate(BaseModel):
     user_id: int
-    item_type: str # 'vocab', 'lesson', 'grammar' va h.k.
+    item_type: str 
     item_id: int
 
 
-# --- FRONTEND (HTML) SAHIFALARNI UZATISH UCHUN YORDAMCHI FUNKSIYA ---
-def get_html_template(filename: str):
-    file_path = f"templates/{filename}"
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return f"<h1>{filename} sahifasi topilmadi! templates papkasini tekshiring.</h1>"
+# --- 1. FRONTEND SAHIFALARNI OCHISH (Jinja2 orqali) ---
 
-
-# --- 1. ASOSIY SAHIFALAR UCHUN ENDPOINTLAR ---
-
+# Saytga kirganda birinchi chiqadigan sahifa - LOGIN / REGISTER
 @app.get("/", response_class=HTMLResponse)
-def read_frontend():
-    return get_html_template("index.html")
+def read_login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+# Tizimga kirgandan keyingi asosiy o'yin va o'qish paneli
+@app.get("/dashboard", response_class=HTMLResponse)
+def read_dashboard(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/listening", response_class=HTMLResponse)
-def read_listening():
-    return get_html_template("listening.html")
+def read_listening(request: Request):
+    return templates.TemplateResponse("listening.html", {"request": request})
 
 @app.get("/speaking", response_class=HTMLResponse)
-def read_speaking():
-    return get_html_template("speaking.html")
+def read_speaking(request: Request):
+    return templates.TemplateResponse("speaking.html", {"request": request})
 
 @app.get("/reading", response_class=HTMLResponse)
-def read_reading():
-    return get_html_template("reading.html")
+def read_reading(request: Request):
+    return templates.TemplateResponse("reading.html", {"request": request})
 
 @app.get("/writing", response_class=HTMLResponse)
-def read_writing():
-    return get_html_template("writing.html")
+def read_writing(request: Request):
+    return templates.TemplateResponse("writing.html", {"request": request})
 
 @app.get("/grammar", response_class=HTMLResponse)
-def read_grammar():
-    return get_html_template("grammar.html")
+def read_grammar(request: Request):
+    return templates.TemplateResponse("grammar.html", {"request": request})
 
 @app.get("/exam", response_class=HTMLResponse)
-def read_exam():
-    return get_html_template("exam.html")
+def read_exam(request: Request):
+    return templates.TemplateResponse("exam.html", {"request": request})
 
 
-# --- 2. API ENDPOINTLAR (Backend logikasi va ma'lumotlar bazasi) ---
+# --- 2. API ENDPOINTLAR (AUTH: Ro'yxatdan o'tish va Kirish) ---
+
+@app.post("/register", response_model=schemas.UserResponse)
+def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(models.User).filter(
+        (models.User.username == user.username) | (models.User.email == user.email)
+    ).first()
+    
+    if existing_user:
+        raise HTTPException(
+            status_code=400, 
+            detail="Bu Username yoki Email allaqachon mavjud!"
+        )
+
+    hashed_pwd = security.get_password_hash(user.password)
+
+    new_user = models.User(
+        username=user.username,
+        email=user.email,
+        password_hash=hashed_pwd,
+        gender=user.gender,
+        balance=300000,
+        current_level=models.CefrLevel.A1
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    welcome_bonus = models.WalletHistory(
+        user_id=new_user.id,
+        amount=300000,
+        reason="Xush kelibsiz bonusi"
+    )
+    db.add(welcome_bonus)
+    db.commit()
+
+    return new_user
+
+@app.post("/login")
+def login_user(login_data: schemas.UserLogin, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == login_data.username).first()
+    
+    if not user or not security.verify_password(login_data.password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Username yoki parol noto'g'ri!")
+    
+    return {"message": "Muvaffaqiyatli kirdingiz!", "username": user.username, "balance": user.balance}
+
+
+# --- 3. API ENDPOINTLAR (O'yin va Mashqlar) ---
 
 @app.get("/api/status")
 def api_status():
@@ -96,7 +144,7 @@ def create_vocab(vocab: VocabCreate, db: Session = Depends(get_db)):
     return db_vocab
 
 @app.post("/tasks/done")
-def mark_task_done(task: TaskDoneUpdate, db: Session = Depends(get_db)):
+def mark_task_done(task: TaskDoneUpdate, db:Session = Depends(get_db)):
     existing_task = db.query(models.DailyTask).filter(
         models.DailyTask.user_id == task.user_id,
         models.DailyTask.item_type == task.item_type,
