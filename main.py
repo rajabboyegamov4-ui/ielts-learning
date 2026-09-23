@@ -100,6 +100,14 @@ def read_login(request: Request):
 def read_dashboard(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
+@app.get("/vocabulary", response_class=HTMLResponse)
+def read_vocabulary_page(request: Request):
+    return templates.TemplateResponse(request, "vocabulary.html")
+
+@app.get("/grammar", response_class=HTMLResponse)
+def read_grammar(request: Request):
+    return templates.TemplateResponse(request, "grammar.html")
+
 @app.get("/listening", response_class=HTMLResponse)
 def read_listening(request: Request):
     return templates.TemplateResponse(request, "listening.html")
@@ -115,10 +123,6 @@ def read_reading(request: Request):
 @app.get("/writing", response_class=HTMLResponse)
 def read_writing(request: Request):
     return templates.TemplateResponse(request, "writing.html")
-
-@app.get("/grammar", response_class=HTMLResponse)
-def read_grammar(request: Request):
-    return templates.TemplateResponse(request, "grammar.html")
 
 @app.get("/exam", response_class=HTMLResponse)
 def read_exam(request: Request):
@@ -170,7 +174,12 @@ def login_user(login_data: schemas.UserLogin, db: Session = Depends(get_db)):
     if not user or not security.verify_password(login_data.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Username yoki parol noto'g'ri!")
     
-    return {"message": "Muvaffaqiyatli kirdingiz!", "username": user.username, "balance": user.balance, "user_id": user.id}
+    return {
+        "message": "Muvaffaqiyatli kirdingiz!", 
+        "username": user.username, 
+        "balance": user.balance, 
+        "user_id": user.id
+    }
 
 @app.post("/forgot-password")
 def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_db)):
@@ -201,21 +210,17 @@ def buy_item(item_id: int, user_id: int, db: Session = Depends(get_db)):
     if not item:
         raise HTTPException(status_code=404, detail="Buyum topilmadi!")
     
-    # 1. Tekshiramiz: Foydalanuvchi bu yuzni oldin sotib olganmi?
     existing_inv = db.query(models.Inventory).filter(
         models.Inventory.user_id == user.id,
         models.Inventory.item_id == item_id
     ).first()
     
-    # MUHIM O'ZGARISH: Agar sotib olgan bo'lsa, xato qaytarmaymiz, shunchaki "Kiyildi" deb javob beramiz
     if existing_inv:
         return {"message": f"Bu yuz sizda bor. Muvaffaqiyatli kiyildi!", "new_balance": user.balance}
     
-    # 2. Agar sotib olmagan bo'lsa, balansini tekshiramiz
     if user.balance < item.price:
         raise HTTPException(status_code=400, detail="Balansingizda yetarli mablag' yo'q!")
     
-    # 3. Pulni yechamiz va tarixga yozamiz
     user.balance -= item.price
     wallet_history = models.WalletHistory(
         user_id=user.id,
@@ -224,7 +229,6 @@ def buy_item(item_id: int, user_id: int, db: Session = Depends(get_db)):
     )
     db.add(wallet_history)
     
-    # 4. Omborga (Inventory) kiyilgan (is_equipped=True) holatida qo'shamiz
     new_inventory = models.Inventory(
         user_id=user.id,
         item_id=item_id,
@@ -236,7 +240,38 @@ def buy_item(item_id: int, user_id: int, db: Session = Depends(get_db)):
     return {"message": f"{item.name} muvaffaqiyatli sotib olindi va kiyildi!", "new_balance": user.balance}
 
 
-# --- 4. QOLGAN API ENDPOINTLAR ---
+# --- 4. LUG'AT VA BOSHQA API ENDPOINTLAR ---
+
+@app.get("/api/words/")
+def get_vocabulary_words(level: str | None = None, db: Session = Depends(get_db)):
+    query = db.query(models.VocabularyWord)
+    if level:
+        query = query.filter(models.VocabularyWord.level == level)
+    return query.all()
+
+@app.get("/seed-vocab")
+def seed_vocabulary(db: Session = Depends(get_db)):
+    if db.query(models.VocabularyWord).count() > 0:
+        return {"message": "Lug'at bazasi allaqachon to'ldirilgan! ✅"}
+
+    words_to_seed = [
+        {"word": "Always", "translation": "Har doim", "example_sentence": "I always wake up early.", "level": "A1", "topic": "Adverb"},
+        {"word": "Environment", "translation": "Atrof-muhit", "example_sentence": "We must protect the environment.", "level": "A1", "topic": "Noun"},
+        {"word": "Important", "translation": "Muhim", "example_sentence": "This exam is very important.", "level": "A1", "topic": "Adjective"},
+        {"word": "Beautiful", "translation": "Chiroyli", "example_sentence": "She is a beautiful girl.", "level": "A1", "topic": "Adjective"},
+        {"word": "Achievement", "translation": "Yutuq", "example_sentence": "Winning the race was a great achievement.", "level": "A2", "topic": "Noun"},
+        {"word": "Determine", "translation": "Aniqlamoq / Qaror qilmoq", "example_sentence": "They need to determine the cause of the problem.", "level": "A2", "topic": "Verb"},
+        {"word": "Go - Went - Gone", "translation": "Bormoq", "example_sentence": "I went to the store yesterday.", "level": "Irregular", "topic": "Verb (V1-V2-V3)"},
+        {"word": "See - Saw - Seen", "translation": "Ko'rmoq", "example_sentence": "Have you seen my keys?", "level": "Irregular", "topic": "Verb (V1-V2-V3)"},
+        {"word": "Take - Took - Taken", "translation": "Olmoq", "example_sentence": "He took my book.", "level": "Irregular", "topic": "Verb (V1-V2-V3)"}
+    ]
+
+    for item in words_to_seed:
+        new_word = models.VocabularyWord(**item)
+        db.add(new_word)
+    
+    db.commit()
+    return {"message": "So'zlar bazaga muvaffaqiyatli yuklandi! 🎉"}
 
 @app.get("/api/status")
 def api_status():
@@ -248,13 +283,6 @@ def get_user_profile(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
     return user
-
-@app.get("/vocabulary/")
-def get_vocabulary(level: str | None = None, db: Session = Depends(get_db)):
-    query = db.query(models.VocabularyWord)
-    if level:
-        query = query.filter(models.VocabularyWord.level == level)
-    return query.all()
 
 @app.post("/vocabulary/")
 def create_vocab(vocab: VocabCreate, db: Session = Depends(get_db)):
@@ -288,32 +316,3 @@ def mark_task_done(task: TaskDoneUpdate, db: Session = Depends(get_db)):
     
     db.commit()
     return {"status": "success", "message": "Vazifa [Done] qilindi va bazaga saqlandi! ✅"}
-    @app.get("/seed-vocab")
-def seed_vocabulary(db: Session = Depends(get_db)):
-    if db.query(models.VocabularyWord).count() > 0:
-        return {"message": "Lug'at bazasi allaqachon to'ldirilgan! ✅"}
-
-    # Barcha darajalar va maxsus bo'limlar uchun tayyor ma'lumotlar bazasi
-    words_to_seed = [
-        # --- A1 DARAJA SO'ZLARI ---
-        {"word": "Always", "translation": "Har doim", "example_sentence": "I always wake up early.", "level": "A1", "topic": "Adverb"},
-        {"word": "Environment", "translation": "Atrof-muhit", "example_sentence": "We must protect the environment.", "level": "A1", "topic": "Noun"},
-        {"word": "Important", "translation": "Muhim", "example_sentence": "This exam is very important.", "level": "A1", "topic": "Adjective"},
-        {"word": "Beautiful", "translation": "Chiroyli", "example_sentence": "She is a beautiful girl.", "level": "A1", "topic": "Adjective"},
-        
-        # --- A2 DARAJA SO'ZLARI (Qulflangan bo'limni tekshirish uchun) ---
-        {"word": "Achievement", "translation": "Yutuq", "example_sentence": "Winning the race was a great achievement.", "level": "A2", "topic": "Noun"},
-        {"word": "Determine", "translation": "Aniqlamoq / Qaror qilmoq", "example_sentence": "They need to determine the cause of the problem.", "level": "A2", "topic": "Verb"},
-        
-        # --- IRREGULAR VERBS (Noto'g'ri fe'llar) ---
-        {"word": "Go - Went - Gone", "translation": "Bormoq", "example_sentence": "I went to the store yesterday.", "level": "Irregular", "topic": "Verb (V1-V2-V3)"},
-        {"word": "See - Saw - Seen", "translation": "Ko'rmoq", "example_sentence": "Have you seen my keys?", "level": "Irregular", "topic": "Verb (V1-V2-V3)"},
-        {"word": "Take - Took - Taken", "translation": "Omoq", "example_sentence": "He took my book.", "level": "Irregular", "topic": "Verb (V1-V2-V3)"}
-    ]
-
-    for item in words_to_seed:
-        new_word = models.VocabularyWord(**item)
-        db.add(new_word)
-    
-    db.commit()
-    return {"message": "Barcha darajalar (A1, A2 va Noto'g'ri fe'llar) bazaga muvaffaqiyatli yuklandi! 🎉"}
