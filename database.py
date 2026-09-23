@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# PostgreSQL o'rniga oddiy SQLite fayl bazasidan foydalanamiz
+# Yangi va toza baza nomi
 SQLALCHEMY_DATABASE_URL = "sqlite:///./ielts_platform.db"
 
 engine = create_engine(
