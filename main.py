@@ -195,25 +195,28 @@ def get_shop_items(db: Session = Depends(get_db)):
 def buy_item(item_id: int, user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi!")
+        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi! Iltimos tizimga qayta kiring.")
 
     item = db.query(models.ShopItem).filter(models.ShopItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Buyum topilmadi!")
     
+    # 1. Tekshiramiz: Foydalanuvchi bu yuzni oldin sotib olganmi?
     existing_inv = db.query(models.Inventory).filter(
         models.Inventory.user_id == user.id,
         models.Inventory.item_id == item_id
     ).first()
     
+    # MUHIM O'ZGARISH: Agar sotib olgan bo'lsa, xato qaytarmaymiz, shunchaki "Kiyildi" deb javob beramiz
     if existing_inv:
-        raise HTTPException(status_code=400, detail="Bu yuz allaqachon sotib olingan!")
+        return {"message": f"Bu yuz sizda bor. Muvaffaqiyatli kiyildi!", "new_balance": user.balance}
     
+    # 2. Agar sotib olmagan bo'lsa, balansini tekshiramiz
     if user.balance < item.price:
         raise HTTPException(status_code=400, detail="Balansingizda yetarli mablag' yo'q!")
     
+    # 3. Pulni yechamiz va tarixga yozamiz
     user.balance -= item.price
-    
     wallet_history = models.WalletHistory(
         user_id=user.id,
         amount=-item.price,
@@ -221,15 +224,16 @@ def buy_item(item_id: int, user_id: int, db: Session = Depends(get_db)):
     )
     db.add(wallet_history)
     
+    # 4. Omborga (Inventory) kiyilgan (is_equipped=True) holatida qo'shamiz
     new_inventory = models.Inventory(
         user_id=user.id,
         item_id=item_id,
-        is_equipped=False
+        is_equipped=True
     )
     db.add(new_inventory)
     db.commit()
     
-    return {"message": "Muvaffaqiyatli sotib olindi!", "new_balance": user.balance}
+    return {"message": f"{item.name} muvaffaqiyatli sotib olindi va kiyildi!", "new_balance": user.balance}
 
 
 # --- 4. QOLGAN API ENDPOINTLAR ---
