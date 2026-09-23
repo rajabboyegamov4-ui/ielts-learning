@@ -73,21 +73,35 @@
                 </button>
             </div>
 
-            <!-- O'ng tomon: Asosiy 2 ta Katta Yo'nalish -->
+            <!-- O'ng tomon: Asosiy Katta Yo'nalishlar (Uchta tugma qilib o'zgartirildi) -->
             <div class="flex flex-col gap-4 justify-center">
-                <a href="/grammar" class="group relative bg-gradient-to-r from-blue-700 to-indigo-800 rounded-xl p-4 border border-blue-500/50 hover:border-blue-400 transition-all hover:scale-[1.02] flex items-center gap-4 overflow-hidden">
+                
+                <!-- 1. Grammatika -->
+                <a href="/grammar" class="group relative bg-gradient-to-r from-blue-700 to-indigo-800 rounded-xl p-4 border border-blue-500/50 hover:border-blue-400 transition-all hover:scale-[1.02] flex items-center gap-4 overflow-hidden shadow-lg">
                     <div class="bg-blue-900/50 p-3 rounded-lg"><i class="fa-solid fa-map-location-dot text-2xl text-blue-300"></i></div>
                     <div>
                         <h3 class="font-bold text-white text-lg">Asosiy Darslar (A1)</h3>
-                        <p class="text-blue-200 text-xs">Grammatika va topshiriqlar</p>
+                        <p class="text-blue-200 text-xs">Grammatika va qoidalar</p>
                     </div>
                 </a>
 
-                <a href="/vocabulary" class="arena-btn group relative bg-gradient-to-r from-red-900 to-red-950 rounded-xl p-4 border-2 border-red-500 hover:border-red-400 transition-all hover:scale-[1.02] flex items-center gap-4">
+                <!-- 2. So'zlar Olami (Friendly) -->
+                <a href="/vocabulary" class="group relative bg-gradient-to-r from-emerald-600 to-teal-700 rounded-xl p-4 border-2 border-emerald-400 hover:border-emerald-300 transition-all hover:scale-[1.02] flex items-center gap-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                    <div class="bg-emerald-900/60 p-3 rounded-xl border border-emerald-400/30">
+                        <i class="fa-solid fa-layer-group text-2xl text-emerald-300 group-hover:-translate-y-1 transition-transform"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-white text-lg tracking-wide">So'zlar Olami <span class="bg-yellow-400 text-black text-[10px] px-2 py-0.5 rounded-full ml-1">QIZIQARLI</span></h3>
+                        <p class="text-emerald-100 text-xs mt-0.5">Yangi so'zlarni kashf eting 🎯</p>
+                    </div>
+                </a>
+
+                <!-- 3. Arena (Pul tikish/Test) -->
+                <a href="/arena" class="arena-btn group relative bg-gradient-to-r from-red-900 to-red-950 rounded-xl p-4 border-2 border-red-500 hover:border-red-400 transition-all hover:scale-[1.02] flex items-center gap-4">
                     <div class="bg-red-900/80 p-3 rounded-lg"><i class="fa-brands fa-d-and-d text-2xl text-red-400 group-hover:rotate-12 transition-transform"></i></div>
                     <div>
-                        <h3 class="font-extrabold text-white text-lg tracking-wide">Arena <span class="text-red-400 text-xs ml-1">(Pul ishlash)</span></h3>
-                        <p class="text-red-300 text-xs">Lug'atga pul tiking (x3)</p>
+                        <h3 class="font-extrabold text-white text-lg tracking-wide">Arena <span class="text-red-400 text-xs ml-1">(Pul tikish)</span></h3>
+                        <p class="text-red-300 text-xs">O'rgangan so'zlaringizni sinang</p>
                     </div>
                 </a>
             </div>
@@ -147,15 +161,7 @@
                 <span class="text-3xl opacity-20 grayscale">📝</span>
                 <div class="opacity-20"><h2 class="text-lg font-bold text-gray-400">Exam</h2></div>
             </div>
-            <!-- Grammar (Ochiq) -->
-            <a href="/grammar" class="group bg-gray-900 hover:bg-gray-800 transition-all duration-300 p-5 rounded-xl flex items-center gap-4 border-2 border-blue-500 hover:border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)] relative overflow-hidden">
-                <div class="absolute -right-6 top-2 bg-blue-600 text-[10px] font-bold px-8 py-1 rotate-45">OCHIQ</div>
-                <span class="text-3xl group-hover:scale-110 transition-transform">📚</span>
-                <div>
-                    <h2 class="text-lg font-bold text-white">Grammar</h2>
-                    <p class="text-xs text-blue-300">Hozirgi o'quv jarayoningiz</p>
-                </div>
-            </a>
+            <!-- Oldingi grammatika tugmasi olib tashlandi, chunki u yuqoriga joylashtirildi -->
         </div>
 
         <!-- Footer -->
