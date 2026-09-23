@@ -112,7 +112,7 @@
                 <p class="text-4xl font-black text-yellow-400">+300,000</p>
             </div>
 
-            <button onclick="window.location.href='/'" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-black py-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
+            <button onclick="window.location.href='/dashboard'" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-black py-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
                 Qabul qilish va Boshlash
             </button>
         </div>
@@ -138,11 +138,41 @@
             }
         }
 
-        function handleLogin(e) {
+        // Tizimga kirish (Login) logikasi
+        async function handleLogin(e) {
             e.preventDefault();
-            alert("Login API ulanmoqda...");
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kuting...';
+            btn.disabled = true;
+
+            const username = document.getElementById('log-username').value;
+            const password = document.getElementById('log-password').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username, password: password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.message + " Balansingiz: " + data.balance + " so'm");
+                    window.location.href = '/dashboard';
+                } else {
+                    alert(data.detail || "Xatolik yuz berdi");
+                }
+            } catch (error) {
+                alert("Server bilan ulanishda xatolik!");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
+        // Ro'yxatdan o'tish (Register) logikasi
         async function handleRegister(e) {
             e.preventDefault();
             const btn = document.getElementById('reg-btn');
@@ -155,7 +185,6 @@
             const gender = document.querySelector('input[name="gender"]:checked').value;
 
             try {
-                // Backend FastAPI ga ma'lumotlarni yuborish
                 const response = await fetch('/register', {
                     method: 'POST',
                     headers: {
