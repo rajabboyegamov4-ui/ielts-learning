@@ -30,41 +30,41 @@ class TaskDoneUpdate(BaseModel):
     item_id: int
 
 
-# --- 1. FRONTEND SAHIFALARNI OCHISH (Jinja2 orqali) ---
+# --- 1. FRONTEND SAHIFALARNI OCHISH (Jinja2 orqali to'g'rilangan) ---
 
 # Saytga kirganda birinchi chiqadigan sahifa - LOGIN / REGISTER
 @app.get("/", response_class=HTMLResponse)
 def read_login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html")
 
 # Tizimga kirgandan keyingi asosiy o'yin va o'qish paneli
 @app.get("/dashboard", response_class=HTMLResponse)
 def read_dashboard(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 @app.get("/listening", response_class=HTMLResponse)
 def read_listening(request: Request):
-    return templates.TemplateResponse("listening.html", {"request": request})
+    return templates.TemplateResponse(request, "listening.html")
 
 @app.get("/speaking", response_class=HTMLResponse)
 def read_speaking(request: Request):
-    return templates.TemplateResponse("speaking.html", {"request": request})
+    return templates.TemplateResponse(request, "speaking.html")
 
 @app.get("/reading", response_class=HTMLResponse)
 def read_reading(request: Request):
-    return templates.TemplateResponse("reading.html", {"request": request})
+    return templates.TemplateResponse(request, "reading.html")
 
 @app.get("/writing", response_class=HTMLResponse)
 def read_writing(request: Request):
-    return templates.TemplateResponse("writing.html", {"request": request})
+    return templates.TemplateResponse(request, "writing.html")
 
 @app.get("/grammar", response_class=HTMLResponse)
 def read_grammar(request: Request):
-    return templates.TemplateResponse("grammar.html", {"request": request})
+    return templates.TemplateResponse(request, "grammar.html")
 
 @app.get("/exam", response_class=HTMLResponse)
 def read_exam(request: Request):
-    return templates.TemplateResponse("exam.html", {"request": request})
+    return templates.TemplateResponse(request, "exam.html")
 
 
 # --- 2. API ENDPOINTLAR (AUTH: Ro'yxatdan o'tish va Kirish) ---
@@ -144,7 +144,7 @@ def create_vocab(vocab: VocabCreate, db: Session = Depends(get_db)):
     return db_vocab
 
 @app.post("/tasks/done")
-def mark_task_done(task: TaskDoneUpdate, db:Session = Depends(get_db)):
+def mark_task_done(task: TaskDoneUpdate, db: Session = Depends(get_db)):
     existing_task = db.query(models.DailyTask).filter(
         models.DailyTask.user_id == task.user_id,
         models.DailyTask.item_type == task.item_type,
