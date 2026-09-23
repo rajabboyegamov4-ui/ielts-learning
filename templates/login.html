@@ -4,30 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kirish - IELTS & AI Platform</title>
-    <!-- Tailwind CSS va FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Confetti animatsiyasi uchun kutubxona -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Modal paydo bo'lish animatsiyasi */
         @keyframes popUp {
             0% { transform: scale(0.5); opacity: 0; }
             80% { transform: scale(1.1); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .animate-pop {
-            animation: popUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
+        .animate-pop { animation: popUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4 relative font-sans overflow-hidden">
 
-    <!-- Orqa fon dekoratsiyasi -->
     <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-    <!-- Asosiy Login/Register Konteyneri -->
     <div id="auth-container" class="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-3xl p-8 w-full max-w-md shadow-2xl z-10 relative">
         
         <div class="text-center mb-8">
@@ -37,44 +30,50 @@
             <p class="text-gray-400 text-sm">O'yin endi boshlandi!</p>
         </div>
 
-        <!-- Tab tugmalari -->
         <div class="flex bg-gray-900 rounded-xl p-1 mb-8">
             <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 rounded-lg text-sm font-bold bg-gray-700 text-white transition-all shadow-md">Kirish</button>
             <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-400 hover:text-white transition-all">Ro'yxatdan o'tish</button>
         </div>
 
-        <!-- KIRISH FORMASI (Login) -->
+        <!-- KIRISH FORMASI -->
         <form id="form-login" class="space-y-5" onsubmit="handleLogin(event)">
             <div>
-                <label class="block text-gray-400 text-xs font-bold mb-2 uppercase">Username yoki Email</label>
+                <label class="block text-gray-400 text-xs font-bold mb-2 uppercase">Username</label>
                 <div class="relative">
                     <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                    <input type="text" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white focus:border-blue-500 focus:outline-none transition-colors" placeholder="Foydalanuvchi nomi" required>
+                    <input type="text" id="log-username" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white focus:border-blue-500 focus:outline-none" placeholder="Foydalanuvchi nomi" required>
                 </div>
             </div>
             <div>
                 <label class="block text-gray-400 text-xs font-bold mb-2 uppercase">Parol</label>
                 <div class="relative">
                     <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                    <input type="password" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white focus:border-blue-500 focus:outline-none transition-colors" placeholder="••••••••" required>
+                    <input type="password" id="log-password" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white focus:border-blue-500 focus:outline-none" placeholder="••••••••" required>
                 </div>
             </div>
-            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
+            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
                 Tizimga kirish
             </button>
         </form>
 
-        <!-- RO'YXATDAN O'TISH FORMASI (Register - Yashirin boshlanadi) -->
-        <form id="form-register" class="space-y-5 hidden" onsubmit="handleRegister(event)">
+        <!-- RO'YXATDAN O'TISH FORMASI -->
+        <form id="form-register" class="space-y-4 hidden" onsubmit="handleRegister(event)">
             <div>
-                <label class="block text-gray-400 text-xs font-bold mb-2 uppercase">Username qanday bo'lsin?</label>
+                <label class="block text-gray-400 text-xs font-bold mb-1 uppercase">Username</label>
                 <div class="relative">
-                    <i class="fa-solid fa-at absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                    <input type="text" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white focus:border-purple-500 focus:outline-none transition-colors" placeholder="Masalan: thisrejo" required>
+                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" id="reg-username" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-white focus:border-purple-500 focus:outline-none" placeholder="Masalan: thisrejo" required>
                 </div>
             </div>
             <div>
-                <label class="block text-gray-400 text-xs font-bold mb-2 uppercase">Jinsingiz (Avatar uchun)</label>
+                <label class="block text-gray-400 text-xs font-bold mb-1 uppercase">Email</label>
+                <div class="relative">
+                    <i class="fa-solid fa-at absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="email" id="reg-email" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-white focus:border-purple-500 focus:outline-none" placeholder="email@gmail.com" required>
+                </div>
+            </div>
+            <div>
+                <label class="block text-gray-400 text-xs font-bold mb-1 uppercase">Jinsingiz</label>
                 <div class="flex gap-4">
                     <label class="flex-1 cursor-pointer">
                         <input type="radio" name="gender" value="male" class="peer hidden" checked>
@@ -87,19 +86,19 @@
                 </div>
             </div>
             <div>
-                <label class="block text-gray-400 text-xs font-bold mb-2 uppercase">Parol o'ylab toping</label>
+                <label class="block text-gray-400 text-xs font-bold mb-1 uppercase">Parol</label>
                 <div class="relative">
                     <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                    <input type="password" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white focus:border-purple-500 focus:outline-none transition-colors" placeholder="Kuchli parol" required>
+                    <input type="password" id="reg-password" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-white focus:border-purple-500 focus:outline-none" placeholder="Kuchli parol" required>
                 </div>
             </div>
-            <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-transform hover:scale-[1.02] flex items-center justify-center gap-2">
+            <button type="submit" id="reg-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-transform hover:scale-[1.02] flex items-center justify-center gap-2 mt-2">
                 <i class="fa-solid fa-gift text-yellow-300"></i> Boshlash va Bonus olish
             </button>
         </form>
     </div>
 
-    <!-- MUVAFFAQIYAT / BONUS MODAL (Yashirin) -->
+    <!-- MUVAFFAQIYAT MODAL -->
     <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-gray-800 border-2 border-yellow-500 rounded-3xl p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(250,204,21,0.3)] animate-pop">
             <div class="w-24 h-24 mx-auto bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-gray-900">
@@ -113,14 +112,13 @@
                 <p class="text-4xl font-black text-yellow-400">+300,000</p>
             </div>
 
-            <button onclick="goToDashboard()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-black py-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
+            <button onclick="window.location.href='/'" class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-black py-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
                 Qabul qilish va Boshlash
             </button>
         </div>
     </div>
 
     <script>
-        // Tablarni almashtirish
         function switchTab(tab) {
             const loginForm = document.getElementById('form-login');
             const registerForm = document.getElementById('form-register');
@@ -140,49 +138,59 @@
             }
         }
 
-        // Oddiy kirish (Login)
         function handleLogin(e) {
             e.preventDefault();
-            // Backend tekshiruvi shu yerda bo'ladi
-            window.location.href = '/'; // Vaqtincha Bosh sahifaga yo'naltirish
+            alert("Login API ulanmoqda...");
         }
 
-        // Ro'yxatdan o'tish va Bonus Animatsiyasi
-        function handleRegister(e) {
+        async function handleRegister(e) {
             e.preventDefault();
-            
-            // Asosiy formani yashirib, modalni ochish
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('success-modal').classList.remove('hidden');
+            const btn = document.getElementById('reg-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kuting...';
+            btn.disabled = true;
 
-            // Mushakbozlik (Confetti) effektini yoqish
-            var duration = 3000;
-            var end = Date.now() + duration;
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const gender = document.querySelector('input[name="gender"]:checked').value;
 
-            (function frame() {
-                confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 },
-                    colors: ['#fbbf24', '#f59e0b', '#3b82f6', '#8b5cf6']
+            try {
+                // Backend FastAPI ga ma'lumotlarni yuborish
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password,
+                        gender: gender
+                    })
                 });
-                confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 },
-                    colors: ['#fbbf24', '#f59e0b', '#3b82f6', '#8b5cf6']
-                });
 
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
+                if (response.ok) {
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('success-modal').classList.remove('hidden');
+
+                    var duration = 3000;
+                    var end = Date.now() + duration;
+                    (function frame() {
+                        confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#fbbf24', '#f59e0b', '#3b82f6', '#8b5cf6'] });
+                        confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#fbbf24', '#f59e0b', '#3b82f6', '#8b5cf6'] });
+                        if (Date.now() < end) requestAnimationFrame(frame);
+                    }());
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || "Xatolik yuz berdi");
+                    btn.innerHTML = '<i class="fa-solid fa-gift text-yellow-300"></i> Boshlash va Bonus olish';
+                    btn.disabled = false;
                 }
-            }());
-        }
-
-        function goToDashboard() {
-            window.location.href = '/'; // Bosh sahifaga o'tish
+            } catch (error) {
+                alert("Server bilan ulanishda xatolik!");
+                btn.innerHTML = '<i class="fa-solid fa-gift text-yellow-300"></i> Boshlash va Bonus olish';
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
