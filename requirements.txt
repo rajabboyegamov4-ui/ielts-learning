@@ -2,3 +2,8 @@ fastapi
 uvicorn
 sqlalchemy
 pydantic
+pydantic-extras
+passlib
+bcrypt
+jinja2
+email-validator
