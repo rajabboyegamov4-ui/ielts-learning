@@ -1,0 +1,123 @@
+<!-- 🎮 Mening personajim (PUBG uslubidagi tugma) -->
+<button onclick="openPubgLobby()" class="mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2 mx-auto">
+    <span>🎮</span> Mening personajim & Do'kon
+</button>
+
+<!-- 🏟️ PUBG Uslubidagi Lobby / Do'kon Oynasi -->
+<div id="pubgLobbyModal" class="hidden fixed inset-0 bg-black bg-opacity-85 flex justify-center items-center z-50 p-4">
+    <div class="bg-gray-900 border-2 border-purple-500 rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden relative shadow-2xl">
+        
+        <!-- Yuqori panel: Sarlavha va Yopish tugmasi -->
+        <div class="bg-gray-800 px-6 py-4 flex justify-between items-center border-b border-gray-700">
+            <h2 class="text-xl font-extrabold text-purple-400 flex items-center gap-2">
+                🛡️ PERSONAJ VA DO'KON LOBBI
+            </h2>
+            <div class="flex items-center gap-4">
+                <!-- Balans -->
+                <div class="bg-gray-900 px-4 py-1.5 rounded-full border border-yellow-500 text-yellow-400 font-bold text-sm">
+                    💰 <span id="lobbyBalance">308,000</span> so'm
+                </div>
+                <button onclick="closePubgLobby()" class="text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+        </div>
+
+        <!-- Asosiy qism (Ikki qismga bo'lingan: O'rtada Personaj, Yonida Do'kon) -->
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-3 overflow-hidden">
+            
+            <!-- Chap/O'rta qism: Personajning O'zi (PUBG Qiyofasi) -->
+            <div class="md:col-span-1 bg-gradient-to-b from-gray-800 to-gray-900 p-6 flex flex-col items-center justify-center border-r border-gray-700 relative">
+                <!-- Maxsus boshqacha yuz ifodasi -->
+                <div class="w-48 h-48 rounded-full bg-purple-900/40 border-4 border-purple-500 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.4)] relative overflow-hidden">
+                    <!-- Bu yerda personajning boshqa yuz ifodasi (masalan, ko'zoynakli yoki jiddiyroq emoji/svg) -->
+                    <div class="text-6xl">😎</div>
+                </div>
+                <h3 class="mt-4 text-xl font-bold text-white" id="lobbyUsername">Foydalanuvchi</h3>
+                <p class="text-sm text-purple-300 mt-1">Daraja: <span class="font-semibold text-yellow-400">A1 ➔ C1</span></p>
+                
+                <div class="mt-6 w-full bg-gray-800 p-3 rounded-xl border border-gray-700 text-center text-xs text-gray-300">
+                    💡 Tanlangan kiyim va yuz qismlari bu yerda aks etadi.
+                </div>
+            </div>
+
+            <!-- O'ng qism: Do'kon va Kategoriyalar (Erkaklar / Qizlar) -->
+            <div class="md:col-span-2 bg-gray-900 p-6 flex flex-col overflow-hidden">
+                
+                <!-- Jins va Kategoriya tanlash tugmalari -->
+                <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    <button onclick="filterShopCategory('male')" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-bold text-white transition whitespace-nowrap">👨 Erkaklar yuzi/kiyimi</button>
+                    <button onclick="filterShopCategory('female')" class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded-xl text-sm font-bold text-white transition whitespace-nowrap">👩 Qizlar yuzi/kiyimi</button>
+                    <button onclick="filterShopCategory('accessory')" class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded-xl text-sm font-bold text-black transition whitespace-nowrap">🕶️ Aksessuarlar</button>
+                </div>
+
+                <!-- Buyumlar ro'yxati (Grid) -->
+                <div id="pubgShopContainer" class="flex-1 grid grid-cols-2 gap-4 overflow-y-auto pr-2">
+                    <!-- JavaScript orqali buyumlar shu yerga yuklanadi -->
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+function openPubgLobby() {
+    document.getElementById('pubgLobbyModal').classList.remove('hidden');
+    loadPubgShopItems();
+}
+
+function closePubgLobby() {
+    document.getElementById('pubgLobbyModal').classList.add('hidden');
+}
+
+async function loadPubgShopItems() {
+    try {
+        const response = await fetch('/shop-items');
+        const items = await response.json();
+        const container = document.getElementById('pubgShopContainer');
+        container.innerHTML = '';
+
+        if (items.length === 0) {
+            container.innerHTML = `<p class="text-gray-400 col-span-2 text-center py-10">Do'konda hozircha buyumlar yo'q.</p>`;
+            return;
+        }
+
+        items.forEach(item => {
+            container.innerHTML += `
+                <div class="bg-gray-800 border border-gray-700 hover:border-purple-500 p-4 rounded-2xl flex flex-col justify-between transition shadow-md">
+                    <div>
+                        <div class="text-3xl mb-2 text-center">👕</div>
+                        <h4 class="font-bold text-white text-sm line-clamp-1">${item.name}</h4>
+                        <p class="text-yellow-400 font-extrabold text-sm mt-1">💰 ${item.price.toLocaleString()} so'm</p>
+                    </div>
+                    <button onclick="buyAndEquipItem(${item.id})" class="mt-4 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow">
+                        Sotib olish & Kiyish
+                    </button>
+                </div>
+            `;
+        });
+    } catch (e) {
+        console.error("Xatolik:", e);
+    }
+}
+
+async function buyAndEquipItem(itemId) {
+    const response = await fetch(`/buy-item/${itemId}`, { method: 'POST' });
+    const result = await response.json();
+    
+    if (response.ok) {
+        alert(result.message);
+        // Balansni yangilash
+        document.getElementById('lobbyBalance').innerText = result.new_balance.toLocaleString();
+        location.reload(); // Umumiy sahifadagi balans ham yangilanishi uchun
+    } else {
+        alert(result.detail || "Xatolik yuz berdi!");
+    }
+}
+
+function filterShopCategory(category) {
+    // Kelgusida filtr qilish uchun funksiya
+    loadPubgShopItems();
+}
+</script>
