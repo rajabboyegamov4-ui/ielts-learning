@@ -174,7 +174,6 @@
             }
         }
 
-        // Parolni unutdim modalini ochish/yopish funksiyalari
         function openForgotPasswordModal() {
             document.getElementById('forgotModal').classList.remove('hidden');
         }
@@ -212,7 +211,7 @@
             }
         }
 
-        // Tizimga kirish (Login) logikasi
+        // Tizimga kirish (Login) logikasi - user_id saqlash qo'shildi
         async function handleLogin(e) {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
@@ -233,10 +232,14 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // MUHIM: Foydalanuvchi ID va username xotiraga yoziladi
+                    localStorage.setItem('user_id', data.user_id);
+                    localStorage.setItem('username', data.username);
+
                     alert(data.message + " Balansingiz: " + data.balance.toLocaleString() + " so'm");
                     window.location.href = '/dashboard';
                 } else {
-                    alert(data.detail || "Xatolik yuz berdi");
+                    alert(data.detail || "Username yoki parol noto'g'ri!");
                 }
             } catch (error) {
                 alert("Server bilan ulanishda xatolik!");
@@ -246,7 +249,7 @@
             }
         }
 
-        // Ro'yxatdan o'tish (Register) logikasi
+        // Ro'yxatdan o'tish (Register) logikasi - user_id saqlash qo'shildi
         async function handleRegister(e) {
             e.preventDefault();
             const btn = document.getElementById('reg-btn');
@@ -262,18 +265,17 @@
             try {
                 const response = await fetch('/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        email: email,
-                        password: password,
-                        gender: gender
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, gender })
                 });
 
+                const data = await response.json();
+
                 if (response.ok) {
+                    // MUHIM: Ro'yxatdan o'tganda ham user_id saqlanadi
+                    localStorage.setItem('user_id', data.id);
+                    localStorage.setItem('username', data.username);
+
                     document.getElementById('auth-container').style.display = 'none';
                     document.getElementById('success-modal').classList.remove('hidden');
 
@@ -285,7 +287,6 @@
                         if (Date.now() < end) requestAnimationFrame(frame);
                     }());
                 } else {
-                    const data = await response.json();
                     alert(data.detail || "Xatolik yuz berdi");
                     btn.innerHTML = originalRegText;
                     btn.disabled = false;
