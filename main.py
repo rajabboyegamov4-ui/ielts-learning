@@ -288,3 +288,32 @@ def mark_task_done(task: TaskDoneUpdate, db: Session = Depends(get_db)):
     
     db.commit()
     return {"status": "success", "message": "Vazifa [Done] qilindi va bazaga saqlandi! ✅"}
+    @app.get("/seed-vocab")
+def seed_vocabulary(db: Session = Depends(get_db)):
+    if db.query(models.VocabularyWord).count() > 0:
+        return {"message": "Lug'at bazasi allaqachon to'ldirilgan! ✅"}
+
+    # Barcha darajalar va maxsus bo'limlar uchun tayyor ma'lumotlar bazasi
+    words_to_seed = [
+        # --- A1 DARAJA SO'ZLARI ---
+        {"word": "Always", "translation": "Har doim", "example_sentence": "I always wake up early.", "level": "A1", "topic": "Adverb"},
+        {"word": "Environment", "translation": "Atrof-muhit", "example_sentence": "We must protect the environment.", "level": "A1", "topic": "Noun"},
+        {"word": "Important", "translation": "Muhim", "example_sentence": "This exam is very important.", "level": "A1", "topic": "Adjective"},
+        {"word": "Beautiful", "translation": "Chiroyli", "example_sentence": "She is a beautiful girl.", "level": "A1", "topic": "Adjective"},
+        
+        # --- A2 DARAJA SO'ZLARI (Qulflangan bo'limni tekshirish uchun) ---
+        {"word": "Achievement", "translation": "Yutuq", "example_sentence": "Winning the race was a great achievement.", "level": "A2", "topic": "Noun"},
+        {"word": "Determine", "translation": "Aniqlamoq / Qaror qilmoq", "example_sentence": "They need to determine the cause of the problem.", "level": "A2", "topic": "Verb"},
+        
+        # --- IRREGULAR VERBS (Noto'g'ri fe'llar) ---
+        {"word": "Go - Went - Gone", "translation": "Bormoq", "example_sentence": "I went to the store yesterday.", "level": "Irregular", "topic": "Verb (V1-V2-V3)"},
+        {"word": "See - Saw - Seen", "translation": "Ko'rmoq", "example_sentence": "Have you seen my keys?", "level": "Irregular", "topic": "Verb (V1-V2-V3)"},
+        {"word": "Take - Took - Taken", "translation": "Omoq", "example_sentence": "He took my book.", "level": "Irregular", "topic": "Verb (V1-V2-V3)"}
+    ]
+
+    for item in words_to_seed:
+        new_word = models.VocabularyWord(**item)
+        db.add(new_word)
+    
+    db.commit()
+    return {"message": "Barcha darajalar (A1, A2 va Noto'g'ri fe'llar) bazaga muvaffaqiyatli yuklandi! 🎉"}
