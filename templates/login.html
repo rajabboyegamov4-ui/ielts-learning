@@ -51,6 +51,14 @@
                     <input type="password" id="log-password" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white focus:border-blue-500 focus:outline-none" placeholder="••••••••" required>
                 </div>
             </div>
+            
+            <!-- Parolni unutdim tugmasi -->
+            <div class="text-right">
+                <button type="button" onclick="openForgotPasswordModal()" class="text-xs text-purple-400 hover:underline">
+                    Parolni unutdingizmi?
+                </button>
+            </div>
+
             <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
                 Tizimga kirish
             </button>
@@ -98,6 +106,34 @@
         </form>
     </div>
 
+    <!-- PAROLNI UNUTDIM MODAL OYNASI -->
+    <div id="forgotModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-gray-800 border border-purple-500 rounded-3xl p-6 max-w-sm w-full text-white relative shadow-2xl">
+            <button onclick="closeForgotPasswordModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+            
+            <h3 class="text-xl font-bold mb-2 text-purple-400 flex items-center gap-2">
+                <i class="fa-solid fa-key"></i> Parolni tiklash
+            </h3>
+            <p class="text-xs text-gray-400 mb-4">Ro'yxatdan o'tgan emailingizni kiriting va yangi parol o'rnating.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Email</label>
+                    <input type="email" id="forgotEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-purple-500 focus:outline-none text-sm" placeholder="example@gmail.com">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Yangi parol</label>
+                    <input type="password" id="forgotNewPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-purple-500 focus:outline-none text-sm" placeholder="••••••••">
+                </div>
+                
+                <button onclick="submitForgotPassword()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-xl transition shadow text-sm">
+                    Parolni yangilash
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MUVAFFAQIYAT MODAL -->
     <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-gray-800 border-2 border-yellow-500 rounded-3xl p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(250,204,21,0.3)] animate-pop">
@@ -138,6 +174,44 @@
             }
         }
 
+        // Parolni unutdim modalini ochish/yopish funksiyalari
+        function openForgotPasswordModal() {
+            document.getElementById('forgotModal').classList.remove('hidden');
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotModal').classList.add('hidden');
+        }
+
+        async function submitForgotPassword() {
+            const email = document.getElementById('forgotEmail').value;
+            const new_password = document.getElementById('forgotNewPassword').value;
+
+            if (!email || !new_password) {
+                alert("Iltimos, barcha maydonlarni to'ldiring!");
+                return;
+            }
+
+            try {
+                const response = await fetch('/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, new_password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.message);
+                    closeForgotPasswordModal();
+                } else {
+                    alert(data.detail || "Xatolik yuz berdi!");
+                }
+            } catch (error) {
+                alert("Server bilan ulanishda xatolik!");
+            }
+        }
+
         // Tizimga kirish (Login) logikasi
         async function handleLogin(e) {
             e.preventDefault();
@@ -159,7 +233,7 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert(data.message + " Balansingiz: " + data.balance + " so'm");
+                    alert(data.message + " Balansingiz: " + data.balance.toLocaleString() + " so'm");
                     window.location.href = '/dashboard';
                 } else {
                     alert(data.detail || "Xatolik yuz berdi");
@@ -176,6 +250,7 @@
         async function handleRegister(e) {
             e.preventDefault();
             const btn = document.getElementById('reg-btn');
+            const originalRegText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kuting...';
             btn.disabled = true;
 
@@ -212,12 +287,12 @@
                 } else {
                     const data = await response.json();
                     alert(data.detail || "Xatolik yuz berdi");
-                    btn.innerHTML = '<i class="fa-solid fa-gift text-yellow-300"></i> Boshlash va Bonus olish';
+                    btn.innerHTML = originalRegText;
                     btn.disabled = false;
                 }
             } catch (error) {
                 alert("Server bilan ulanishda xatolik!");
-                btn.innerHTML = '<i class="fa-solid fa-gift text-yellow-300"></i> Boshlash va Bonus olish';
+                btn.innerHTML = originalRegText;
                 btn.disabled = false;
             }
         }
