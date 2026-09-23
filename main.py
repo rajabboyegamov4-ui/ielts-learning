@@ -34,27 +34,57 @@ class ForgotPasswordSchema(BaseModel):
     new_password: str
 
 
-# --- STARTUP: DO'KON UCHUN BOSHLANG'ICH BUYUMLarni QO'SHISH ---
+# --- STARTUP: REAL YUZLAR BILAN DO'KONNI TO'LDIRISH ---
 @app.on_event("startup")
 def startup_event():
     db = next(get_db())
     if db.query(models.ShopItem).count() == 0:
         default_items = [
-            # Erkaklar uchun yuz va kiyimlar
-            models.ShopItem(name="Klassik Yuz (Erkak)", item_type=models.ItemTypeEnum.hair, price=15000, is_rare=False),
-            models.ShopItem(name="Stilist Soch & Yuz (Erkak)", item_type=models.ItemTypeEnum.hair, price=45000, is_rare=True),
-            models.ShopItem(name="Qora Kostyum (Erkak)", item_type=models.ItemTypeEnum.clothes, price=50000, is_rare=False),
-            models.ShopItem(name="Smoking (Erkak)", item_type=models.ItemTypeEnum.clothes, price=120000, is_rare=True),
-            
-            # Qizlar uchun yuz va kiyimlar
-            models.ShopItem(name="Elegant Yuz (Qiz)", item_type=models.ItemTypeEnum.hair, price=15000, is_rare=False),
-            models.ShopItem(name="Modulli Soch (Qiz)", item_type=models.ItemTypeEnum.hair, price=50000, is_rare=True),
-            models.ShopItem(name="Kechki ko'ylak (Qiz)", item_type=models.ItemTypeEnum.clothes, price=60000, is_rare=False),
-            models.ShopItem(name="Brend Ko'ylak (Qiz)", item_type=models.ItemTypeEnum.clothes, price=130000, is_rare=True),
-            
-            # Aksessuarlar
-            models.ShopItem(name="Quyosh ko'zoynagi", item_type=models.ItemTypeEnum.accessory, price=25000, is_rare=False),
-            models.ShopItem(name="Zargarlik taqinchog'i", item_type=models.ItemTypeEnum.accessory, price=80000, is_rare=True),
+            # --- ERKAKLAR YUZLARI ---
+            models.ShopItem(
+                name="Alex (Klassik yuz)", 
+                item_type=models.ItemTypeEnum.hair, 
+                price=25000, 
+                model_url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150", 
+                is_rare=False
+            ),
+            models.ShopItem(
+                name="David (Stilist yuz)", 
+                item_type=models.ItemTypeEnum.hair, 
+                price=45000, 
+                model_url="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150", 
+                is_rare=True
+            ),
+            models.ShopItem(
+                name="Marcus (Jiddiy qiyofa)", 
+                item_type=models.ItemTypeEnum.hair, 
+                price=60000, 
+                model_url="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150", 
+                is_rare=True
+            ),
+
+            # --- QIZLAR YUZLARI ---
+            models.ShopItem(
+                name="Sophia (Elegant yuz)", 
+                item_type=models.ItemTypeEnum.hair, 
+                price=25000, 
+                model_url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150", 
+                is_rare=False
+            ),
+            models.ShopItem(
+                name="Emma (Modulli qiyofa)", 
+                item_type=models.ItemTypeEnum.hair, 
+                price=50000, 
+                model_url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150", 
+                is_rare=True
+            ),
+            models.ShopItem(
+                name="Olivia (Nodir yuz)", 
+                item_type=models.ItemTypeEnum.hair, 
+                price=80000, 
+                model_url="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150", 
+                is_rare=True
+            ),
         ]
         db.add_all(default_items)
         db.commit()
@@ -142,7 +172,6 @@ def login_user(login_data: schemas.UserLogin, db: Session = Depends(get_db)):
     
     return {"message": "Muvaffaqiyatli kirdingiz!", "username": user.username, "balance": user.balance, "user_id": user.id}
 
-# Parolni unutdim (Forgot Password) endpointi
 @app.post("/forgot-password")
 def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == data.email).first()
@@ -156,7 +185,7 @@ def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_db)):
     return {"message": "Parolingiz muvaffaqiyatli o'zgartirildi! Yangi parol bilan kirishingiz mumkin."}
 
 
-# --- 3. DO'KON VA PERSONAJ (MARKET & WARDROBE) ENDPOINTLARI ---
+# --- 3. DO'KON VA PERSONAJ ENDPOINTLARI ---
 
 @app.get("/shop-items")
 def get_shop_items(db: Session = Depends(get_db)):
@@ -164,7 +193,6 @@ def get_shop_items(db: Session = Depends(get_db)):
 
 @app.post("/buy-item/{item_id}")
 def buy_item(item_id: int, user_id: int, db: Session = Depends(get_db)):
-    # Hozirgi foydalanuvchini id orqali topamiz (Frontenddan user_id keladi yoki session orqali)
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi!")
@@ -173,23 +201,19 @@ def buy_item(item_id: int, user_id: int, db: Session = Depends(get_db)):
     if not item:
         raise HTTPException(status_code=404, detail="Buyum topilmadi!")
     
-    # Allaqachon sotib olinganligini tekshirish
     existing_inv = db.query(models.Inventory).filter(
         models.Inventory.user_id == user.id,
         models.Inventory.item_id == item_id
     ).first()
     
     if existing_inv:
-        raise HTTPException(status_code=400, detail="Bu buyum allaqachon sotib olingan!")
+        raise HTTPException(status_code=400, detail="Bu yuz allaqachon sotib olingan!")
     
-    # Balans yetarliligini tekshirish
     if user.balance < item.price:
         raise HTTPException(status_code=400, detail="Balansingizda yetarli mablag' yo'q!")
     
-    # Balansdan ayirish
     user.balance -= item.price
     
-    # Tarixga yozish
     wallet_history = models.WalletHistory(
         user_id=user.id,
         amount=-item.price,
@@ -197,7 +221,6 @@ def buy_item(item_id: int, user_id: int, db: Session = Depends(get_db)):
     )
     db.add(wallet_history)
     
-    # Omborga qo'shish
     new_inventory = models.Inventory(
         user_id=user.id,
         item_id=item_id,
