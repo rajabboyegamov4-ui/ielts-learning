@@ -76,7 +76,7 @@ class VocabularyWord(Base):
     translation = Column(String(255), nullable=False)
     example_sentence = Column(Text, nullable=True)
     level = Column(String(10), nullable=False)
-    topic = Column(String(100), nullable=Type = Column(String(100), nullable=True)) # tuzatildi
+    topic = Column(String(100), nullable=True)
 
 
 class Lesson(Base):
@@ -124,7 +124,7 @@ class ShopItem(Base):
 
 
 class Inventory(Base):
-    __tablename_ = "inventory"
+    __tablename__ = "inventory" # <--- bu yerdagi pastki chiziq xatosi to'g'irlandi (__tablename__)
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
