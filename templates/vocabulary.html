@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>So'zlar Olami - IELTS & AI</title>
+    <title>So'zlar Olami - IELTS & AI Platform</title>
+    <!-- Tailwind, FontAwesome va Confetti -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }
@@ -18,178 +20,270 @@
         }
         .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
 
-        /* Smooth bounce animation */
+        .selected-tile { 
+            border-color: #3b82f6 !important; 
+            background-color: rgba(59, 130, 246, 0.25) !important; 
+            transform: scale(1.03);
+        }
+        .matched-tile { 
+            opacity: 0; 
+            pointer-events: none; 
+            transform: scale(0.7); 
+            transition: all 0.4s ease; 
+        }
+
         @keyframes softBounce {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+            50% { transform: translateY(-4px); }
         }
-        .animate-soft-bounce { animation: softBounce 3s infinite ease-in-out; }
+        .animate-soft-bounce { animation: softBounce 2.5s infinite ease-in-out; }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen font-sans flex flex-col items-center p-4">
+<body class="bg-gray-950 text-white min-h-screen font-sans flex flex-col items-center p-3 md:p-6">
 
     <!-- Navbar -->
-    <div class="max-w-4xl w-full flex justify-between items-center mb-8 bg-gray-800 p-4 rounded-3xl border border-gray-700 shadow-lg">
-        <a href="/dashboard" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
+    <div class="max-w-4xl w-full flex justify-between items-center mb-6 bg-gray-900/90 backdrop-blur-md p-4 rounded-3xl border border-gray-800 shadow-xl">
+        <a href="/dashboard" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-2xl text-xs md:text-sm font-bold transition flex items-center gap-2 border border-gray-700">
             <i class="fa-solid fa-house"></i> Bosh sahifa
         </a>
-        <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
+        <h1 class="text-lg md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
             🌱 So'zlar Olami
         </h1>
-        <div class="text-sm font-bold bg-gray-900 px-4 py-2 rounded-xl text-yellow-400 border border-gray-700">
-            <i class="fa-solid fa-star"></i> Tajriba: <span id="xp-points">0</span>
+        <div class="flex items-center gap-3">
+            <div class="text-xs md:text-sm font-black bg-gray-800 px-3 py-1.5 rounded-2xl text-yellow-400 border border-yellow-500/30 flex items-center gap-1.5">
+                <i class="fa-solid fa-coins"></i> <span id="userBalance">308 000</span>
+            </div>
+            <div class="text-xs md:text-sm font-black bg-gray-800 px-3 py-1.5 rounded-2xl text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                <i class="fa-solid fa-bolt"></i> <span id="xpPoints">150</span> XP
+            </div>
         </div>
     </div>
 
-    <!-- DARAJALAR MENYUSI -->
-    <div id="levels-container" class="max-w-4xl w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        <!-- A1 (Ochiq) -->
-        <div onclick="openFlashcards('A1')" class="bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-emerald-500/50 hover:border-emerald-400 p-6 rounded-3xl cursor-pointer transition transform hover:-translate-y-2 group shadow-xl">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl font-black group-hover:scale-110 transition">
-                    🌱
-                </div>
-                <span class="bg-emerald-500/20 text-emerald-400 text-xs font-black px-3 py-1 rounded-full uppercase">Ochiq</span>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-1">A1 Beginner</h3>
-            <p class="text-gray-400 text-sm mb-4">Eng kerakli kundalik so'zlar. Sekin va oson boshlaymiz!</p>
-            <div class="w-full bg-gray-800 rounded-full h-2.5 mb-2 overflow-hidden border border-gray-700">
-                <div class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full rounded-full" style="width: 15%"></div>
-            </div>
-            <p class="text-right text-xs text-gray-500 font-bold">15% o'rganildi</p>
-        </div>
-
-        <!-- A2 (Qulflangan) -->
-        <div onclick="showLockedAlert('A1')" class="bg-gray-800/60 border-2 border-gray-700 p-6 rounded-3xl cursor-not-allowed relative">
-            <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-[2px] flex flex-col justify-center items-center z-10 rounded-3xl">
-                <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mb-2 shadow-lg border border-gray-600">
-                    <i class="fa-solid fa-lock text-gray-400"></i>
-                </div>
-                <span class="text-xs font-bold text-gray-400 px-4 text-center">A1 ni to'liq yodlab bo'lgach ochiladi</span>
-            </div>
-            <div class="w-12 h-12 bg-gray-700/50 text-gray-500 rounded-2xl flex items-center justify-center text-2xl font-black mb-4">🌿</div>
-            <h3 class="text-xl font-bold text-gray-500 mb-1">A2 Elementary</h3>
-            <p class="text-gray-600 text-sm mb-4">Biroz qiyinroq so'zlar to'plami.</p>
-            <div class="w-full bg-gray-800 rounded-full h-2.5 mb-2 border border-gray-700"></div>
-        </div>
-
-        <!-- Irregular Verbs (Ochiq) -->
-        <div onclick="openFlashcards('Irregular')" class="bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-purple-500/50 hover:border-purple-400 p-6 rounded-3xl cursor-pointer transition transform hover:-translate-y-2 group shadow-xl">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-2xl flex items-center justify-center text-2xl font-black group-hover:scale-110 transition">
-                    ⚡
-                </div>
-                <span class="bg-purple-500/20 text-purple-400 text-xs font-black px-3 py-1 rounded-full uppercase">Maxsus</span>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-1">Noto'g'ri Fe'llar</h3>
-            <p class="text-gray-400 text-sm mb-4">Fe'llarning 3 ta shaklini oson yodlash.</p>
-            <div class="w-full bg-gray-800 rounded-full h-2.5 mb-2 overflow-hidden border border-gray-700">
-                <div class="bg-gradient-to-r from-purple-400 to-pink-400 h-full rounded-full" style="width: 5%"></div>
-            </div>
-            <p class="text-right text-xs text-gray-500 font-bold">5% o'rganildi</p>
-        </div>
+    <!-- 1. DARAJALAR VA TO'PLAMLAR RO'YXATI (ASOSIY MENYU) -->
+    <div id="levels-container" class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- JS orqali to'plamlar avtomatik yuklanadi -->
     </div>
 
-    <!-- O'YIN MUHITI: FLESHKARTALAR (Yashiringan) -->
-    <div id="flashcard-container" class="hidden max-w-md w-full flex-col items-center relative z-10 mt-4">
+    <!-- 2. O'YIN VA DARSLIK XONASI (Boshida yashirilgan) -->
+    <div id="gameRoom" class="hidden max-w-lg w-full flex-col items-center bg-gray-900 border border-gray-800 rounded-3xl p-5 md:p-7 shadow-2xl relative">
         
-        <!-- O'yin headeri -->
-        <div class="w-full flex justify-between items-center mb-6">
-            <button onclick="closeFlashcards()" class="text-gray-400 hover:text-white transition w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700">
+        <!-- Dars Headeri -->
+        <div class="w-full flex justify-between items-center mb-3">
+            <button onclick="exitGameRoom()" class="text-gray-400 hover:text-white w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700 transition">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            
-            <!-- Progress bar -->
-            <div class="flex-1 mx-6 bg-gray-800 rounded-full h-3 border border-gray-700 relative overflow-hidden">
-                <div id="learning-progress" class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-            
-            <span class="text-sm text-gray-400 font-bold bg-gray-800 px-3 py-1 rounded-xl"><span id="word-index">1</span> / <span id="total-words">10</span></span>
+            <span id="stepBadge" class="text-xs font-black uppercase text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30">
+                1-bosqich: Video & Karta
+            </span>
+            <span class="text-xs text-gray-400 font-bold bg-gray-800 px-2.5 py-1 rounded-xl">
+                <span id="wordProgress">1</span> / <span id="totalWordCount">4</span>
+            </span>
         </div>
 
-        <p class="text-gray-400 text-sm mb-6 animate-soft-bounce"><i class="fa-regular fa-hand-pointer text-emerald-400"></i> Tarjimasini ko'rish uchun kartani bosing</p>
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-800 h-2 rounded-full mb-5 overflow-hidden border border-gray-700/50">
+            <div id="progressBar" class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full w-1/4 transition-all duration-300"></div>
+        </div>
 
-        <!-- 3D Flashcard -->
-        <div class="flashcard w-full h-80 perspective-1000 cursor-pointer mb-8" onclick="flipCard()">
-            <div class="flashcard-inner w-full h-full relative transition-transform duration-500 transform-style-3d">
-                
-                <!-- OLF TOMONI (Inglizcha) -->
-                <div class="absolute w-full h-full backface-hidden bg-white rounded-[2rem] flex flex-col justify-center items-center p-6 text-center shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-4 border-gray-200">
-                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-volume-high text-blue-400 text-2xl"></i>
-                    </div>
-                    <h2 id="card-word" class="text-4xl font-black text-gray-800 mb-2 tracking-tight">Environment</h2>
-                    <p id="card-type" class="text-gray-400 font-medium text-sm">Noun</p>
+        <!-- 1-BOSQICH: VIDEO VA 3D FLESHKARTA -->
+        <div id="stepVideoCard" class="w-full flex flex-col items-center">
+            
+            <!-- Kontekst Video Pleyeri -->
+            <div class="w-full h-44 bg-black rounded-2xl overflow-hidden border border-gray-700/80 mb-4 shadow-inner relative flex items-center justify-center">
+                <video id="wordVideo" class="w-full h-full object-cover" autoplay loop muted playsinline>
+                    <source src="" type="video/mp4">
+                </video>
+                <div class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm px-2.5 py-0.5 rounded-lg text-[10px] text-gray-300 flex items-center gap-1 border border-gray-700">
+                    <i class="fa-solid fa-film text-emerald-400"></i> Kontekst video
                 </div>
+            </div>
 
-                <!-- ORQA TOMONI (O'zbekcha) -->
-                <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-[2rem] flex flex-col justify-center items-center p-8 text-center shadow-[0_10px_30px_rgba(16,185,129,0.4)]">
-                    <h2 id="card-translation" class="text-4xl font-black text-white mb-6 tracking-tight drop-shadow-md">Atrof-muhit</h2>
+            <!-- O'girish eslatmasi -->
+            <p class="text-gray-400 text-xs mb-3 animate-soft-bounce">
+                <i class="fa-regular fa-hand-pointer text-emerald-400"></i> Tarjimasini ko'rish uchun kartani bosing
+            </p>
+
+            <!-- 3D Flashcard -->
+            <div class="flashcard w-full h-64 perspective-1000 cursor-pointer mb-5" onclick="flipCard()">
+                <div class="flashcard-inner w-full h-full relative transition-transform duration-500 transform-style-3d shadow-xl rounded-3xl">
                     
-                    <div class="bg-black/20 p-4 rounded-2xl backdrop-blur-sm w-full">
-                        <p class="text-emerald-100 text-xs font-bold uppercase mb-1 opacity-80">Misol:</p>
-                        <p id="card-example" class="text-white text-lg font-medium italic">"We must protect the environment."</p>
+                    <!-- Oldi (Inglizcha) -->
+                    <div class="absolute w-full h-full backface-hidden bg-white text-gray-900 rounded-3xl flex flex-col justify-center items-center p-6 text-center border-4 border-gray-200">
+                        <button onclick="event.stopPropagation(); speakWord()" class="w-12 h-12 bg-blue-50 hover:bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-3 shadow transition active:scale-95" title="Talaffuzni tinglash">
+                            <i class="fa-solid fa-volume-high text-xl"></i>
+                        </button>
+                        <h2 id="cardWord" class="text-3xl md:text-4xl font-black text-gray-800 mb-1 tracking-tight">Environment</h2>
+                        <span id="cardTopic" class="text-xs font-bold text-gray-400 uppercase tracking-widest">Vocabulary</span>
+                    </div>
+
+                    <!-- Orqasi (O'zbekcha) -->
+                    <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl flex flex-col justify-center items-center p-6 text-center shadow-lg border-2 border-emerald-400">
+                        <h2 id="cardTrans" class="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight drop-shadow-md">Atrof-muhit</h2>
+                        <div class="w-full bg-black/20 p-3 rounded-xl backdrop-blur-sm border border-white/10 text-left">
+                            <p class="text-[11px] font-bold text-emerald-200 uppercase mb-0.5">Misol:</p>
+                            <p id="cardExample" class="text-white text-sm italic font-medium">"We must protect the natural environment."</p>
+                        </div>
                     </div>
                 </div>
+            </div>
 
+            <!-- Davom etish tugmasi -->
+            <button onclick="startScrambleGame()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-gray-950 font-black py-3.5 rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.3)] transition transform hover:scale-[1.01] flex items-center justify-center gap-2 text-sm">
+                <span>Mashq: Harflardan terish</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- 2-BOSQICH: HARFLARDAN SO'Z TERISH (SCRAMBLE) -->
+        <div id="stepScramble" class="hidden w-full flex-col items-center">
+            <div class="bg-gray-800/80 p-3 rounded-2xl w-full text-center border border-gray-700 mb-5">
+                <span class="text-xs text-gray-400 block font-bold mb-0.5">O'ZBEKCHA MA'NOSI:</span>
+                <span id="scrambleHint" class="text-lg font-black text-emerald-400">Atrof-muhit</span>
+            </div>
+            
+            <!-- Harf yig'iladigan kataklar -->
+            <div id="assembledSlots" class="flex gap-2 min-h-[50px] mb-6 items-center justify-center flex-wrap"></div>
+
+            <!-- Aralash harflar -->
+            <div id="letterTiles" class="flex gap-2 justify-center flex-wrap mb-6 max-w-sm"></div>
+
+            <div class="flex gap-3 w-full">
+                <button onclick="resetScrambleWord()" class="flex-1 bg-gray-800 hover:bg-gray-700 py-3 rounded-2xl font-bold text-xs text-gray-300 transition border border-gray-700">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Qaytadan
+                </button>
+                <button onclick="checkScrambleWord()" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 py-3 rounded-2xl font-black text-xs text-white transition shadow-lg">
+                    Tekshirish <i class="fa-solid fa-check ml-1"></i>
+                </button>
             </div>
         </div>
 
-        <!-- DO'STONA TUGMALAR -->
-        <div class="w-full flex gap-4 mt-2">
-            <!-- Qizil emas, Oranj/Sariq rang "Yana qaytarish" uchun -->
-            <button onclick="nextWord(false)" class="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-600 font-bold py-4 rounded-2xl transition transform hover:scale-105 shadow-sm flex flex-col items-center gap-1 border border-orange-200">
-                <i class="fa-solid fa-rotate-right text-xl"></i>
-                <span class="text-xs">Hali chala</span>
-            </button>
+        <!-- 3-BOSQICH: JUFTLASH O'YINI (MATCHING PAIRS) -->
+        <div id="stepMatching" class="hidden w-full flex-col items-center">
+            <p class="text-xs font-bold text-gray-400 mb-4 text-center">
+                Barcha so'zlarni tarjimasi bilan juftlang:
+            </p>
+            <div id="matchingGrid" class="w-full grid grid-cols-2 gap-3 mb-6"></div>
+        </div>
+
+    </div>
+
+    <!-- MUVAFFAQIYAT MODAL OYNASI -->
+    <div id="successModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-gray-900 border-2 border-emerald-500 rounded-3xl p-7 max-w-sm w-full text-center shadow-[0_0_40px_rgba(16,185,129,0.3)]">
+            <div class="w-20 h-20 mx-auto bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-full flex items-center justify-center mb-4 shadow-xl border-4 border-gray-900">
+                <i class="fa-solid fa-trophy text-3xl text-gray-950"></i>
+            </div>
+            <h3 class="text-2xl font-black text-white mb-1">AJOYIB NATIJA!</h3>
+            <p class="text-gray-400 text-xs mb-5">Siz ushbu darsdagi barcha so'zlarni muvaffaqiyatli o'zlashtirdingiz!</p>
             
-            <!-- Yashil "Ajoyib" tugmasi -->
-            <button onclick="nextWord(true)" class="flex-1 bg-gradient-to-t from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-white font-bold py-4 rounded-2xl shadow-[0_10px_20px_rgba(16,185,129,0.3)] transition transform hover:scale-105 flex flex-col items-center gap-1">
-                <i class="fa-solid fa-check text-xl"></i>
-                <span class="text-xs">Zo'r, yodladim!</span>
+            <div class="bg-gray-800 p-3.5 rounded-2xl border border-gray-700 mb-5 flex justify-around">
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold block">BALANS</span>
+                    <span class="text-sm font-black text-yellow-400">+5 000 so'm</span>
+                </div>
+                <div class="w-px bg-gray-700"></div>
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold block">TAJRIBA</span>
+                    <span class="text-sm font-black text-emerald-400">+50 XP</span>
+                </div>
+            </div>
+
+            <button onclick="closeSuccessModal()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black py-3.5 rounded-2xl transition">
+                Darslarga qaytish
             </button>
         </div>
     </div>
 
     <script>
-        let currentWords = [];
+        let lessonWords = [];
         let currentIndex = 0;
+        let assembledWord = "";
+        let selectedMatchingTile = null;
 
-        function showLockedAlert(requiredLevel) {
-            alert(`Ushbu bo'lim qulflangan 🔒\nOchish uchun avval ${requiredLevel} darajasini to'liq yodlab tugatishingiz kerak. \nQo'rqmang, buni uddalaysiz! 😊`);
-        }
+        window.addEventListener('DOMContentLoaded', async () => {
+            const userId = localStorage.getItem('user_id');
+            if (userId) {
+                try {
+                    const res = await fetch(`/users/${userId}`);
+                    if (res.ok) {
+                        const userData = await res.json();
+                        document.getElementById('userBalance').innerText = userData.balance.toLocaleString();
+                    }
+                } catch (e) {}
+            }
+            loadSets();
+        });
 
-        async function openFlashcards(level) {
-            document.getElementById('levels-container').classList.add('hidden');
-            document.getElementById('flashcard-container').classList.remove('hidden');
-            document.getElementById('flashcard-container').classList.add('flex');
-
+        // 1. To'plamlar ro'yxatini yuklash
+        async function loadSets() {
             try {
-                // Backenddan api/words orqali chaqiramiz
-                const response = await fetch(`/api/words/?level=${level}`);
-                const data = await response.json();
-                
-                if (data.length > 0) {
-                    currentWords = data;
-                    currentIndex = 0;
-                    document.getElementById('total-words').innerText = currentWords.length;
-                    updateProgress();
-                    showWordCard();
-                } else {
-                    alert("Kechirasiz, bu daraja uchun hozircha so'zlar kiritilmagan. 😊");
-                    closeFlashcards();
-                }
+                const res = await fetch('/api/vocab/sets');
+                const sets = await res.json();
+                const container = document.getElementById('levels-container');
+                container.innerHTML = '';
+
+                sets.forEach(s => {
+                    container.innerHTML += `
+                        <div class="bg-gray-900 border ${s.is_locked ? 'border-gray-800/80 opacity-60' : 'border-emerald-500/40 hover:border-emerald-400'} p-5 rounded-3xl flex justify-between items-center transition shadow-lg">
+                            <div>
+                                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full ${s.is_locked ? 'bg-gray-800 text-gray-500' : 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'} mb-2 inline-block">
+                                    ${s.badge}
+                                </span>
+                                <h3 class="text-base md:text-lg font-black text-white">${s.title}</h3>
+                                <p class="text-xs text-gray-400 mt-0.5 font-medium">${s.words_count} ta so'z · ${s.lessons} ta dars</p>
+                            </div>
+                            ${s.is_locked 
+                                ? `<div class="w-10 h-10 bg-gray-800/90 rounded-2xl flex items-center justify-center text-gray-500"><i class="fa-solid fa-lock"></i></div>`
+                                : `<button onclick="startLesson(${s.set}, 1)" class="bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black px-4 py-2.5 rounded-2xl text-xs transition shadow-md">Boshlash</button>`
+                            }
+                        </div>
+                    `;
+                });
             } catch (e) {
-                alert("Server bilan bog'lanishda xato yuz berdi!");
-                closeFlashcards();
+                console.error("To'plamlarni yuklashda xato:", e);
             }
         }
 
-        function closeFlashcards() {
-            document.getElementById('flashcard-container').classList.add('hidden');
-            document.getElementById('flashcard-container').classList.remove('flex');
+        // 2. Darsni boshlash
+        async function startLesson(setId, lessonId) {
+            try {
+                const res = await fetch(`/api/vocab/lesson/${setId}/${lessonId}`);
+                lessonWords = await res.json();
+                currentIndex = 0;
+
+                document.getElementById('totalWordCount').innerText = lessonWords.length;
+                document.getElementById('levels-container').classList.add('hidden');
+                document.getElementById('gameRoom').classList.remove('hidden');
+                document.getElementById('gameRoom').classList.add('flex');
+
+                loadCurrentWordStep();
+            } catch (e) {
+                alert("Dars ma'lumotlarini yuklab bo'lmadi!");
+            }
+        }
+
+        function exitGameRoom() {
+            document.getElementById('gameRoom').classList.add('hidden');
+            document.getElementById('gameRoom').classList.remove('flex');
             document.getElementById('levels-container').classList.remove('hidden');
+        }
+
+        // 1-BOSQICH: Video va Fleshkarta ko'rsatish
+        function loadCurrentWordStep() {
+            const current = lessonWords[currentIndex];
+            document.getElementById('wordProgress').innerText = currentIndex + 1;
+            document.getElementById('progressBar').style.width = `${((currentIndex + 1) / lessonWords.length) * 100}%`;
+
+            document.getElementById('stepBadge').innerText = "1-bosqich: Video & Karta";
+            document.getElementById('stepVideoCard').classList.remove('hidden');
+            document.getElementById('stepScramble').classList.add('hidden');
+            document.getElementById('stepMatching').classList.add('hidden');
+
+            document.getElementById('wordVideo').src = current.video_url;
+            document.getElementById('cardWord').innerText = current.word;
+            document.getElementById('cardTrans').innerText = current.translation;
+            document.getElementById('cardExample').innerText = `"${current.example}"`;
+            
+            // Fleshkarta holatini dastlabki yuziga qaytarish
             document.querySelector('.flashcard').classList.remove('flipped');
         }
 
@@ -197,41 +291,138 @@
             document.querySelector('.flashcard').classList.toggle('flipped');
         }
 
-        function showWordCard() {
-            const wordObj = currentWords[currentIndex];
-            document.getElementById('word-index').innerText = currentIndex + 1;
-            
-            // OLF TOMONI
-            document.getElementById('card-word').innerText = wordObj.word;
-            document.getElementById('card-type').innerText = wordObj.topic || "Vocabulary";
-            
-            // ORQA TOMONI
-            document.getElementById('card-translation').innerText = wordObj.translation;
-            document.getElementById('card-example').innerText = `"${wordObj.example_sentence || "Misol topilmadi :)"}"`;
-            
-            document.querySelector('.flashcard').classList.remove('flipped');
-            updateProgress();
-        }
-
-        function nextWord(isKnown) {
-            // isKnown = true bo'lsa, o'quvchi bu so'zni "Zo'r, yodladim" dedi.
-            // isKnown = false bo'lsa, "Hali chala" dedi (Buni keyinroq algoritmga ulash mumkin).
-            
-            if (currentIndex < currentWords.length - 1) {
-                currentIndex++;
-                showWordCard();
-            } else {
-                updateProgress(100);
-                setTimeout(() => {
-                    alert("Ajoyib ish! 🎉 Siz bu darsdagi barcha so'zlarni ko'rib chiqdingiz. Davom etamiz!");
-                    closeFlashcards();
-                }, 300);
+        function speakWord() {
+            const word = lessonWords[currentIndex].word;
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
             }
         }
 
-        function updateProgress(forceValue = null) {
-            let percentage = forceValue !== null ? forceValue : (currentIndex / currentWords.length) * 100;
-            document.getElementById('learning-progress').style.width = `${percentage}%`;
+        // 2-BOSQICH: Harflardan terish (Scramble)
+        function startScrambleGame() {
+            document.getElementById('stepBadge').innerText = "2-bosqich: Harflardan terish";
+            document.getElementById('stepVideoCard').classList.add('hidden');
+            document.getElementById('stepScramble').classList.remove('hidden');
+            document.getElementById('stepScramble').classList.add('flex');
+
+            const current = lessonWords[currentIndex];
+            document.getElementById('scrambleHint').innerText = current.translation;
+
+            assembledWord = "";
+            renderSlotsAndTiles(current.word);
+        }
+
+        function renderSlotsAndTiles(word) {
+            const slotsContainer = document.getElementById('assembledSlots');
+            const tilesContainer = document.getElementById('letterTiles');
+            slotsContainer.innerHTML = '';
+            tilesContainer.innerHTML = '';
+
+            for (let i = 0; i < word.length; i++) {
+                slotsContainer.innerHTML += `<div class="w-8 h-10 border-b-2 border-emerald-500/60 flex items-center justify-center text-xl font-black text-emerald-400"></div>`;
+            }
+
+            const letters = word.toUpperCase().split('').sort(() => Math.random() - 0.5);
+            letters.forEach((char) => {
+                const btn = document.createElement('button');
+                btn.className = "w-10 h-10 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl font-black text-white text-base shadow transition active:scale-95";
+                btn.innerText = char;
+                btn.onclick = () => {
+                    assembledWord += char;
+                    btn.classList.add('invisible');
+                    updateSlots();
+                };
+                tilesContainer.appendChild(btn);
+            });
+        }
+
+        function updateSlots() {
+            const slots = document.getElementById('assembledSlots').children;
+            for (let i = 0; i < slots.length; i++) {
+                slots[i].innerText = assembledWord[i] || '';
+            }
+        }
+
+        function resetScrambleWord() {
+            assembledWord = "";
+            renderSlotsAndTiles(lessonWords[currentIndex].word);
+        }
+
+        function checkScrambleWord() {
+            const original = lessonWords[currentIndex].word.toUpperCase();
+            if (assembledWord === original) {
+                if (currentIndex < lessonWords.length - 1) {
+                    currentIndex++;
+                    loadCurrentWordStep();
+                } else {
+                    startMatchingGame();
+                }
+            } else {
+                alert("Noto'g'ri terildi. Qaytadan urinib ko'ring!");
+                resetScrambleWord();
+            }
+        }
+
+        // 3-BOSQICH: Juftlash o'yini (Matching Pairs)
+        function startMatchingGame() {
+            document.getElementById('stepBadge').innerText = "Yakuniy bosqich: Juftlash";
+            document.getElementById('stepScramble').classList.add('hidden');
+            document.getElementById('stepMatching').classList.remove('hidden');
+            document.getElementById('stepMatching').classList.add('flex');
+
+            const grid = document.getElementById('matchingGrid');
+            grid.innerHTML = '';
+
+            let tiles = [];
+            lessonWords.forEach(w => {
+                tiles.push({ id: w.id, text: w.word, type: 'en' });
+                tiles.push({ id: w.id, text: w.translation, type: 'uz' });
+            });
+            tiles.sort(() => Math.random() - 0.5);
+
+            tiles.forEach(t => {
+                const div = document.createElement('div');
+                div.className = "bg-gray-800 border-2 border-gray-700 hover:border-gray-500 p-4 rounded-2xl text-center font-bold text-xs md:text-sm cursor-pointer select-none transition shadow";
+                div.innerText = t.text;
+                div.onclick = () => handleMatchingClick(div, t);
+                grid.appendChild(div);
+            });
+        }
+
+        function handleMatchingClick(element, item) {
+            if (!selectedMatchingTile) {
+                selectedMatchingTile = { element, item };
+                element.classList.add('selected-tile');
+            } else {
+                if (selectedMatchingTile.element === element) return;
+
+                if (selectedMatchingTile.item.id === item.id && selectedMatchingTile.item.type !== item.type) {
+                    element.classList.add('matched-tile');
+                    selectedMatchingTile.element.classList.add('matched-tile');
+                    selectedMatchingTile = null;
+
+                    const remaining = document.querySelectorAll('#matchingGrid > div:not(.matched-tile)');
+                    if (remaining.length === 0) {
+                        celebrateLessonFinish();
+                    }
+                } else {
+                    selectedMatchingTile.element.classList.remove('selected-tile');
+                    selectedMatchingTile = null;
+                }
+            }
+        }
+
+        function celebrateLessonFinish() {
+            confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            exitGameRoom();
         }
     </script>
 </body>
